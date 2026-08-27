@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Content Refresh Prioritization with Leakage-Safe Machine Learning</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        line-height: 1.65;
+        color: #222;
+        background: #f5f7fa;
+    }
+
+    .container {
+        max-width: 980px;
+        margin: 0 auto;
+        background: white;
+        padding: 55px 70px;
+        min-height: 100vh;
+    }
+
+    h1 {
+        font-size: 38px;
+        line-height: 1.2;
+        margin-bottom: 12px;
+        color: #172033;
+    }
+
+    h2 {
+        margin-top: 48px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e5e7eb;
+        color: #172033;
+    }
+
+    h3 {
+        margin-top: 30px;
+        color: #273449;
+    }
+
+    p {
+        margin: 12px 0;
+    }
+
+    .subtitle {
+        color: #64748b;
+        font-size: 18px;
+        margin-bottom: 35px;
+    }
+
+    .abstract {
+        background: #f1f5f9;
+        border-left: 5px solid #475569;
+        padding: 22px 25px;
+        margin: 25px 0;
+    }
+
+    .callout {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin: 22px 0;
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin: 25px 0;
+    }
+
+    .metric {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .metric .number {
+        display: block;
+        font-size: 32px;
+        font-weight: 700;
+        color: #172033;
+    }
+
+    .metric .label {
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+    }
+
+    th, td {
+        border: 1px solid #dbe1e8;
+        padding: 12px 15px;
+        text-align: left;
+    }
+
+    th {
+        background: #f1f5f9;
+        color: #172033;
+    }
+
+    .chart {
+        margin: 30px 0;
+        padding: 25px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: white;
+    }
+
+    .bar-row {
+        display: grid;
+        grid-template-columns: 190px 1fr 80px;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .bar-track {
+        height: 30px;
+        background: #e5e7eb;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .bar {
+        height: 100%;
+        background: #64748b;
+        border-radius: 5px;
+    }
+
+    .bar-baseline {
+        width: 24%;
+    }
+
+    .bar-model {
+        width: 74%;
+    }
+
+    .value {
+        font-weight: 700;
+    }
+
+    li {
+        margin: 8px 0;
+    }
+
+    code {
+        background: #f1f5f9;
+        padding: 2px 5px;
+        border-radius: 4px;
+    }
+
+    a {
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    .footer {
+        margin-top: 60px;
+        padding-top: 25px;
+        border-top: 1px solid #e2e8f0;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    @media (max-width: 700px) {
+        .container {
+            padding: 30px 22px;
+        }
+
+        h1 {
+            font-size: 30px;
+        }
+
+        .metric-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .bar-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Content Refresh Prioritization with Leakage-Safe Machine Learning</h1>
+
+<div class="subtitle">
+A decision-support study using pseudonymized FlyRank search-performance data
+</div>
+
+<h2>Abstract</h2>
+
+<div class="abstract">
+
+<p>
+This study examines whether a leakage-safe machine-learning ranking approach can identify pages that should be prioritized for content-refresh review more effectively than a transparent hand-written baseline.
+</p>
+
+<p>
+Using pseudonymized FlyRank search-performance data, the analysis defines a declining-content target and trains a Random Forest ranking approach using search-performance signals available before the target window.
+</p>
+
+<p>
+The learned model is evaluated against the hand-written baseline using Precision@50 under a client-grouped validation design so observations from the same client are not shared between training and evaluation.
+</p>
+
+<p>
+On the evaluation split, the Random Forest achieved a measured Precision@50 of 0.740 compared with 0.240 for the hand-written baseline, corresponding to a 3.1× relative ratio.
+</p>
+
+<p>
+The result is interpreted as observed ranking-quality evidence for human-reviewed content prioritization rather than evidence that refreshing recommended pages will causally improve traffic, rankings, clicks, or conversions.
+</p>
+
+</div>
+
+<h2>1. Introduction / Problem Statement</h2>
+
+<p>
+Content teams often have more pages to review than they can inspect manually. A practical question is therefore how to prioritize pages for review using observable search-performance signals.
+</p>
+
+<p>
+The research question for this project is:
+</p>
+
+<div class="callout">
+<strong>
+Can a leakage-safe machine-learning ranking approach identify pages that should be prioritized for content refresh more effectively than a transparent hand-written baseline?
+</strong>
+</div>
+
+<p>
+The decision supported by this analysis is review prioritization: which pages should a content team inspect first when deciding whether a refresh may be useful.
+</p>
+
+<p>
+The goal is not to predict a search-engine ranking algorithm and not to estimate the causal effect of refreshing a page. Instead, the goal is to measure whether a learned ranking approach provides stronger decision support than a simple transparent baseline under the same evaluation design.
+</p>
+
+<h2>2. Data</h2>
+
+<p>
+The analysis uses the FlyRank internship search-performance dataset. The data are pseudonymized and use identifiers rather than public client names, domains, URLs, titles, or search queries.
+</p>
+
+<p>
+The modeling workflow uses content-level search-performance observations containing signals such as impressions, clicks, click-through rate, search position, and trend information. Client and content identifiers are used for grouping and validation rather than as predictive features.
+</p>
+
+<p>
+The target represents declining content under the defined internship workflow. Features are aligned so that information used as predictors is available before the target window.
+</p>
+
+<p>
+Target-derived fields are excluded from the predictive feature set. In particular, fields whose values directly define or encode the target are not used as predictors because doing so would create label leakage.
+</p>
+
+<div class="callout">
+<strong>Public-safety rule:</strong>
+The paper does not expose private client names, URLs, search queries, credentials, access tokens, or other private identifiers.
+</div>
+
+<h2>3. Methodology</h2>
+
+<h3>Baseline</h3>
+
+<p>
+The baseline is a transparent hand-written ranking rule based on observable search-performance signals. It provides a simple and interpretable reference for deciding which pages should be reviewed first.
+</p>
+
+<h3>Learned model</h3>
+
+<p>
+The learned approach uses the Random Forest model selected during ML-08. The model is trained to rank pages according to the defined declining-content target.
+</p>
+
+<h3>Evaluation metric</h3>
+
+<p>
+The primary metric is Precision@50. It measures the proportion of genuinely declining pages among the 50 highest-ranked pages.
+</p>
+
+<p>
+This metric is appropriate for the intended decision-support setting because a content team may have limited review capacity and therefore cares about the quality of the first items in the queue.
+</p>
+
+<h3>Validation design</h3>
+
+<p>
+Validation uses a client-grouped holdout. Observations belonging to the same client are kept together rather than randomly distributing the same client's observations across training and evaluation data.
+</p>
+
+<p>
+This design reduces the risk that the model receives information about a client during training and is then evaluated on another observation from that same client.
+</p>
+
+<h3>Leakage checks</h3>
+
+<ul>
+    <li>Target-derived variables were excluded from the feature set.</li>
+    <li>Future-window information was excluded from predictors.</li>
+    <li>Client identifiers were used for grouping rather than prediction.</li>
+    <li>Existing decision or product flags were excluded where they would reproduce the target or an existing decision.</li>
+    <li>The model was compared with the baseline under the same evaluation metric and split.</li>
+</ul>
+
+<h2>4. Results</h2>
+
+<p>
+The learned model and the hand-written baseline were compared on the same evaluation setup using Precision@50.
+</p>
+
+<div class="metric-grid">
+
+<div class="metric">
+    <span class="number">0.240</span>
+    <span class="label">Hand-written baseline Precision@50</span>
+</div>
+
+<div class="metric">
+    <span class="number">0.740</span>
+    <span class="label">Random Forest Precision@50</span>
+</div>
+
+<div class="metric">
+    <span class="number">3.1×</span>
+    <span class="label">Relative ratio</span>
+</div>
+
+</div>
+
+<table>
+<thead>
+<tr>
+    <th>Method</th>
+    <th>Metric</th>
+    <th>Precision@50</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+    <td>Hand-written baseline</td>
+    <td>Precision@50</td>
+    <td>0.240</td>
+</tr>
+
+<tr>
+    <td>Random Forest</td>
+    <td>Precision@50</td>
+    <td>0.740</td>
+</tr>
+</tbody>
+</table>
+
+<div class="chart">
+
+<h3>Model vs Hand-written Baseline</h3>
+
+<div class="bar-row">
+    <div>Hand-written baseline</div>
+    <div class="bar-track">
+        <div class="bar bar-baseline"></div>
+    </div>
+    <div class="value">0.240</div>
+</div>
+
+<div class="bar-row">
+    <div>Random Forest</div>
+    <div class="bar-track">
+        <div class="bar bar-model"></div>
+    </div>
+    <div class="value">0.740</div>
+</div>
+
+</div>
+
+<p>
+On the evaluation split, the Random Forest produced higher measured Precision@50 than the hand-written baseline. The difference is an observed ranking-quality result under this dataset, target definition, feature set, and validation design.
+</p>
+
+<p>
+The result supports considering the learned ranking as decision support when its measured improvement is large enough to justify the additional complexity and review effort.
+</p>
+
+<h2>5. Limitations & Honest Framing</h2>
+
+<p>
+This analysis has several important limitations.
+</p>
+
+<ul>
+
+<li>
+<strong>Precision@50 is a ranking metric, not a business-impact metric.</strong>
+A higher Precision@50 does not prove that refreshing a page will increase traffic, clicks, rankings, conversions, or revenue.
+</li>
+
+<li>
+<strong>The data are observational.</strong>
+The analysis does not contain a randomized intervention in which pages are refreshed and compared with an untreated control group. Therefore, the findings support prioritization and decision-support claims rather than causal claims.
+</li>
+
+<li>
+<strong>The validation design has limits.</strong>
+Client-grouped validation reduces client memorization, but it does not guarantee that future data will behave identically to the evaluation data.
+</li>
+
+<li>
+<strong>The target is a proxy for review prioritization.</strong>
+A page classified as declining does not automatically mean that its content is poor or that a refresh is the correct intervention.
+</li>
+
+<li>
+<strong>Model complexity is not success by itself.</strong>
+The learned model should be preferred over the transparent baseline only when the measured ranking improvement is meaningful and remains credible under honest validation and leakage checks.
+</li>
+
+</ul>
+
+<div class="callout">
+<strong>Safe interpretation:</strong>
+The evidence is best described using terms such as <em>observed</em>, <em>measured</em>, <em>directional</em>, and <em>decision-support</em>.
+</div>
+
+<h2>6. Ranked Recommendations</h2>
+
+<p>
+The recommendations are intended to create a human-reviewed content-prioritization queue rather than an automated publishing system.
+</p>
+
+<h3>1. Prioritize pages showing strong evidence of declining search performance</h3>
+
+<p>
+These pages should be reviewed first because the ranking approach is designed to identify pages with signals associated with the declining-content target.
+</p>
+
+<p>
+<strong>Reason code:</strong> <code>DECLINING_PERFORMANCE</code>
+</p>
+
+<p>
+<strong>Action:</strong> Review the page's current content, search-intent alignment, and recent performance before deciding whether a refresh is appropriate.
+</p>
+
+<h3>2. Review pages with weak CTR relative to their search position</h3>
+
+<p>
+A page receiving substantial impressions while generating comparatively weak click-through performance can be a useful review candidate.
+</p>
+
+<p>
+<strong>Reason code:</strong> <code>LOW_CTR_HIGH_POSITION</code>
+</p>
+
+<p>
+<strong>Action:</strong> Review title and meta-description relevance, search-intent alignment, and whether the visible result communicates the page's value clearly.
+</p>
+
+<h3>3. Review high-volume pages before low-impact pages</h3>
+
+<p>
+Pages with substantial search exposure can have greater potential decision value because a content-team review affects a larger observed search footprint.
+</p>
+
+<p>
+<strong>Reason code:</strong> <code>HIGH_SEARCH_VOLUME</code>
+</p>
+
+<p>
+<strong>Action:</strong> Prioritize human review when the page also shows evidence of declining or inefficient performance.
+</p>
+
+<h3>4. Treat model scores as review priority, not automatic instructions</h3>
+
+<p>
+A high score indicates that a page is worth inspecting. It does not establish that a refresh will improve performance.
+</p>
+
+<p>
+<strong>Reason code:</strong> <code>MODEL_REVIEW_PRIORITY</code>
+</p>
+
+<p>
+<strong>Action:</strong> Require a content specialist to review the page and confirm that a refresh is appropriate before making changes.
+</p>
+
+<h3>Human review requirement</h3>
+
+<p>
+The queue should support human decision-making rather than replace it. Reviewers should consider search intent, content quality, recent changes, seasonality, technical issues, and other contextual factors that may not be represented in the model.
+</p>
+
+<p>
+The recommendations are therefore directional decision support, not guaranteed optimization actions.
+</p>
+
+<h2>7. Reproducibility</h2>
+
+<p>
+The analysis is documented in the project repository and the executed capstone notebook.
+</p>
+
+<ul>
+    <li>
+        <a href="../work/notebooks/capstone.ipynb">Executed ML-11 capstone notebook</a>
+    </li>
+    <li>
+        ML-08 contains the model training and baseline comparison.
+    </li>
+    <li>
+        ML-09 contains the validation and leakage audit.
+    </li>
+    <li>
+        ML-10 contains the content action playbook and ranked recommendations.
+    </li>
+</ul>
+
+<p>
+The project uses the same target definition, evaluation metric, and validation principles established in the preceding assignments. Results should therefore be interpreted together with the underlying notebooks and their validation checks.
+</p>
+
+<h2>8. Acknowledgments & Data Credit</h2>
+
+<p>
+Built on the FlyRank ML Internship dataset. The analysis uses the internship dataset as the source of the pseudonymized search-performance data used throughout the project.
+</p>
+
+<p>
+Data source:
+<a href="https://flyrank.ai" target="_blank" rel="noopener noreferrer">FlyRank</a>
+</p>
+
+<p>
+This work was completed as part of the FlyRank ML Internship capstone track.
+</p>
+
+<div class="footer">
+
+<p>
+Research artifact — content-refresh prioritization using leakage-safe machine learning.
+</p>
+
+<p>
+The findings are intended for human-reviewed decision support and should not be interpreted as causal estimates of content-refresh impact.
+</p>
+
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,1 +1,3 @@
-PASTE-YOUR-DEPLOYED-PAPER-URL-HERE
+DEPLOYED-PAPER-URL
+
+https://kaifahmad236.github.io/flyrank-ml-internship/
